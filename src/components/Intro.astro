@@ -1,0 +1,45 @@
+---
+import { site } from '../data/site';
+const [first, second] = site.titles;
+---
+<div id="intro" class="fixed inset-0 z-50 grid place-items-center overflow-hidden bg-bg px-6" aria-hidden="true">
+  <div class="intro-block text-center">
+    <p class="intro-name text-5xl font-semibold md:text-8xl">Soy {site.name}</p>
+    <p class="mt-4 text-2xl text-muted md:text-4xl">
+      <span data-type={first}></span><span class="text-accent" data-type={` & ${second}`}></span><span class="caret">|</span>
+    </p>
+    <p class="intro-follow mt-10 text-sm uppercase tracking-widest">Sigue viendo el portafolio →</p>
+  </div>
+</div>
+<script is:inline>
+  (() => {
+    const el = document.getElementById('intro');
+    if (!el) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let seen = null;
+    try { seen = sessionStorage.getItem('intro'); sessionStorage.setItem('intro', '1'); } catch {}
+    if (seen) return el.remove();
+    document.documentElement.style.overflow = 'hidden';
+
+    const timers = [];
+    const at = (ms, fn) => timers.push(setTimeout(fn, ms));
+    const type = (node, start, speed = 70) =>
+      [...node.dataset.type].forEach((c, i) => at(start + i * speed, () => (node.textContent += c)));
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      timers.forEach(clearTimeout);
+      el.classList.add('intro-out');
+      document.documentElement.style.overflow = '';
+      setTimeout(() => el.remove(), 1700);
+    };
+
+    const [t1, t2] = el.querySelectorAll('[data-type]');
+    if (reduce) { t1.textContent = t1.dataset.type; t2.textContent = t2.dataset.type; at(2000, finish); }
+    else { type(t1, 1200); type(t2, 2800); at(5400, finish); }
+
+    ['click', 'keydown', 'wheel', 'touchstart'].forEach((e) => addEventListener(e, finish, { once: true }));
+  })();
+</script>

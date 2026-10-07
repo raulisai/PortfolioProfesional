@@ -1,0 +1,33 @@
+---
+import '../styles/global.css';
+import { site } from '../data/site';
+const { title = `${site.name} · ${site.titles.join(' & ')}` } = Astro.props;
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={site.description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={site.description} />
+    <meta name="theme-color" content="#05060a" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body id="top">
+    <div class="stars" aria-hidden="true"></div>
+    <slot />
+    <script is:inline>
+      const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && (e.target.classList.add('in'), io.unobserve(e.target))), { threshold: 0.15 });
+      document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+      const root = document.documentElement;
+      let ticking = false;
+      addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => { root.style.setProperty('--scroll', scrollY); ticking = false; });
+      }, { passive: true });
+    </script>
+  </body>
+</html>

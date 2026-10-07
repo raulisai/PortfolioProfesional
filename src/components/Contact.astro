@@ -1,0 +1,60 @@
+---
+import { Image } from 'astro:assets';
+import { site } from '../data/site';
+import space from '../assets/scene/space.webp';
+---
+<section id="contacto" class="relative isolate flex min-h-dvh flex-col justify-center overflow-clip px-6 pb-6 pt-20 md:block md:min-h-0 md:px-10 md:pb-10 md:pt-32" aria-label="Contacto">
+  <Image src={space} alt="" aria-hidden="true" class="horizon -z-10" widths={[900, 1400, 1774]} sizes="120vw" />
+  <div class="mx-auto grid max-w-6xl gap-6 md:grid-cols-2 md:gap-20">
+    <div>
+      <p class="reveal eyebrow">Contacto</p>
+      <h2 class="reveal mt-3 text-[clamp(1.7rem,7.4vw,2.1rem)] font-bold leading-[1.1] md:mt-5 md:text-[clamp(2.2rem,4.4vw,3.8rem)] md:leading-[1.06] tracking-tight" style="--i:1">
+        ¿Quieres <span class="text-gradient">contratarme</span> o necesitas asesoría para tu proyecto?
+      </h2>
+      <p class="reveal sub mt-2 text-sm text-muted md:mt-5 md:text-lg" style="--i:2">Escríbeme y te respondo pronto.</p>
+      <ul class="reveal mt-4 flex flex-wrap gap-2 md:mt-10 md:gap-3" style="--i:3">
+        {site.socials.map((s) => (
+          <li><a href={s.href} target="_blank" rel="noopener" class="chip inline-flex items-center gap-2 px-4 py-2 text-sm transition-colors hover:border-accent/50 hover:text-white">{s.label} <span aria-hidden="true">↗</span></a></li>
+        ))}
+      </ul>
+    </div>
+
+    <form id="contact-form" class="reveal space-y-2.5 rounded-2xl border border-line bg-white/[.025] p-4 backdrop-blur-md md:space-y-4 md:rounded-3xl md:p-8" style="--i:2" novalidate>
+      <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
+      <label class="block text-sm"><span class="eyebrow">Nombre</span>
+        <input name="name" required minlength="2" maxlength="80" autocomplete="name" class="field mt-1 !py-2 md:mt-2 md:!py-[0.85rem]" /></label>
+      <label class="block text-sm"><span class="eyebrow">Correo</span>
+        <input name="email" type="email" required autocomplete="email" class="field mt-1 !py-2 md:mt-2 md:!py-[0.85rem]" /></label>
+      <label class="block text-sm"><span class="eyebrow">Mensaje</span>
+        <textarea name="message" required minlength="10" maxlength="2000" rows="3" class="field mt-1 resize-none !py-2 md:mt-2 md:resize-y md:!py-[0.85rem]"></textarea></label>
+      <div class="flex flex-wrap items-center gap-3 pt-1 md:gap-4 md:pt-2">
+        <button type="submit" class="btn-glow !px-5 !py-2.5 !text-[0.85rem] disabled:opacity-50 md:!px-[1.9rem] md:!py-[0.95rem] md:!text-[0.95rem]">
+          Enviar mensaje
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 9 9 3M4 3h5v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </button>
+        <p id="form-status" class="text-sm" role="status" aria-live="polite"></p>
+      </div>
+    </form>
+  </div>
+  <footer class="mx-auto mt-5 flex w-full max-w-6xl md:mt-28 items-center justify-between border-t border-line pt-3 text-xs text-muted md:pt-6">
+    <span>© {new Date().getFullYear()} {site.name}</span>
+    <a href="#top" class="link-underline">Volver arriba ↑</a>
+  </footer>
+</section>
+
+<script>
+  import { actions } from 'astro:actions';
+  const form = document.getElementById('contact-form') as HTMLFormElement;
+  const status = document.getElementById('form-status')!;
+  const btn = form.querySelector('button')!;
+  const label = btn.firstChild!;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!form.reportValidity()) return;
+    btn.disabled = true; label.textContent = 'Enviando… '; status.textContent = ''; status.className = 'text-sm';
+    const { error } = await actions.sendMessage(new FormData(form));
+    btn.disabled = false; label.textContent = 'Enviar mensaje ';
+    if (error) { status.textContent = error.message || 'No se pudo enviar. Inténtalo de nuevo.'; status.classList.add('text-red-400'); }
+    else { form.reset(); status.textContent = '¡Mensaje enviado! Te contesto pronto.'; status.classList.add('text-mint'); }
+  });
+</script>
