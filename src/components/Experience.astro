@@ -3,60 +3,135 @@ import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import { site } from '../data/site';
 const jobs = (await getCollection('experience')).sort((a, b) => a.data.order - b.data.order);
-const [h1, h2, h3] = site.experienceHeading;
+const n = jobs.length;
+const heads = [...jobs.map((j) => j.data.headline), site.experienceHeading]; // el último es el título final
 ---
-<section id="experiencia" class="relative flex min-h-dvh flex-col justify-center overflow-clip px-6 pb-8 pt-20 md:block md:min-h-0 md:px-10 md:py-36" aria-label="Experiencia">
-  <div class="pointer-events-none absolute -left-40 top-10 size-[36rem] rounded-full bg-accent/10 blur-[140px]" aria-hidden="true"></div>
-  <div class="relative mx-auto grid max-w-6xl gap-6 md:grid-cols-[1fr_1.35fr] md:gap-20">
-    <div class="md:sticky md:top-32 md:self-start">
-      <p class="reveal eyebrow">Experiencia</p>
-      <h2 class="reveal mt-3 text-[clamp(1.9rem,8.4vw,2.4rem)] font-bold leading-[1.08] md:text-[clamp(2.4rem,5vw,4.2rem)] md:leading-[1.05] tracking-tight" style="--i:1">
-        {h1}<br /><span class="text-gradient">{h2}</span><br />{h3}
-      </h2>
-    </div>
+<section id="experiencia" data-xp data-step={n} data-n={n} style={`--n:${n}`} class="xp relative" aria-label="Experiencia">
+  <div class="xp-stick">
+    <div class="pointer-events-none absolute -left-40 top-10 size-[36rem] rounded-full bg-accent/10 blur-[140px]" aria-hidden="true"></div>
+    <div class="relative mx-auto grid w-full max-w-6xl gap-5 md:grid-cols-[1fr_1.35fr] md:items-start md:gap-20">
+      <div class="md:pt-[7dvh]">
+        <p class="eyebrow">Experiencia <span data-xp-count class="ml-2 tabular-nums text-mint"></span></p>
+        <div class="mt-3 grid md:mt-5">
+          {heads.map(([a, b, c], k) => (
+            <h2 data-head class:list={['xp-h text-[clamp(1.9rem,8.4vw,2.4rem)] font-bold leading-[1.08] tracking-tight md:text-[clamp(2.4rem,5vw,4.2rem)] md:leading-[1.05]', k === n && 'on']} aria-hidden={k === n ? undefined : 'true'}>
+              {a}<br /><span class="text-gradient">{b}</span><br />{c}
+            </h2>
+          ))}
+        </div>
+      </div>
 
-    <ol class="relative" data-timeline>
-      <div class="tl-line" aria-hidden="true"><div class="tl-fill"></div></div>
-      {jobs.map((j, i) => (
-        <li class="reveal relative grid grid-cols-[23px_1fr] gap-4 pb-5 last:pb-0 md:pb-12" style={`--i:${i}`} data-job>
-          <span class="tl-node mt-1" aria-hidden="true"></span>
-          <div>
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-              {j.data.logo
-                ? <Image src={j.data.logo} alt="" class="size-7 rounded-lg object-contain md:size-8" width={64} height={64} />
-                : <span class="grid size-7 place-items-center md:size-8 rounded-lg border border-line bg-white/[.04] text-sm font-semibold text-accent" aria-hidden="true">{j.data.company[0]}</span>}
-              <h3 class="text-base font-semibold md:text-lg">{j.data.company}</h3>
-              <span class="ml-auto text-xs tabular-nums text-muted md:text-sm">{j.data.start} — {j.data.end ?? 'Actualidad'}</span>
+      <ol class="relative">
+        {jobs.map((j) => (
+          <li class="xp-job lit relative grid grid-cols-[23px_1fr] gap-4" data-job data-state="done" data-final>
+            <span class="tl-node mt-1" aria-hidden="true"></span>
+            <div>
+              <div class="xp-head flex flex-wrap items-center gap-x-3 gap-y-1">
+                {j.data.logo
+                  ? <Image src={j.data.logo} alt="" class="size-7 rounded-lg object-contain md:size-8" width={64} height={64} />
+                  : <span class="grid size-7 place-items-center rounded-lg border border-line bg-white/[.04] text-sm font-semibold text-accent md:size-8" aria-hidden="true">{j.data.company[0]}</span>}
+                <h3 class="xp-company text-base font-semibold md:text-lg">{j.data.company}</h3>
+                <span class="ml-auto text-xs tabular-nums text-muted md:text-sm">{j.data.start} — {j.data.end ?? 'Actualidad'}</span>
+              </div>
+              <p class="mt-0.5 pl-11 text-[0.8rem] text-fg/80 md:mt-1 md:text-sm">{j.data.role}</p>
+
+              <!-- Detalle: solo mientras la experiencia está en foco -->
+              <div class="xp-fold xp-detail-fold"><div class="inner">
+                <div class="pl-11 pt-2 md:pt-3">
+                  <p class="eyebrow">Problema</p>
+                  <p class="mt-1 max-w-lg text-[0.75rem] leading-snug text-fg/85 md:text-sm md:leading-relaxed">{j.data.challenge}</p>
+                  <p class="eyebrow mt-2.5 md:mt-4">Tecnologías y aprendizajes</p>
+                  <ul class="mt-1.5 flex flex-wrap gap-1.5 md:mt-2 md:gap-2">
+                    {j.data.learned.map((l) => <li class="chip !border-accent/35 !bg-accent/10 !px-2.5 !py-0.5 !text-[0.68rem] !text-[#dfe2ff] md:!px-[0.85rem] md:!py-[0.35rem] md:!text-[0.78rem]">{l}</li>)}
+                  </ul>
+                </div>
+              </div></div>
+
+              <!-- Versión compacta final -->
+              <div class="xp-fold xp-sum-fold"><div class="inner">
+                <p class="mt-1 max-w-lg pl-11 text-[0.75rem] leading-snug text-muted md:mt-2 md:text-sm md:leading-relaxed">{j.data.summary}</p>
+                {j.data.stack.length > 0 && (
+                  <>
+                    <p class="mt-1 truncate pl-11 text-[0.68rem] text-accent/80 md:hidden">{j.data.stack.join(' · ')}</p>
+                    <ul class="ex-chips mt-3 hidden flex-wrap gap-2 pl-11 md:flex">{j.data.stack.map((s) => <li class="chip">{s}</li>)}</ul>
+                  </>
+                )}
+              </div></div>
             </div>
-            <p class="mt-0.5 pl-11 text-[0.8rem] text-fg/80 md:mt-1 md:text-sm">{j.data.role}</p>
-            <p class="mt-1 max-w-lg pl-11 text-[0.75rem] leading-snug text-muted md:mt-2 md:text-sm md:leading-relaxed">{j.data.summary}</p>
-            {j.data.stack.length > 0 && (
-              <>
-                <p class="mt-1 truncate pl-11 text-[0.68rem] text-accent/80 md:hidden">{j.data.stack.join(' · ')}</p>
-                <ul class="ex-chips mt-4 hidden flex-wrap gap-2 pl-11 md:flex">{j.data.stack.map((s) => <li class="chip">{s}</li>)}</ul>
-              </>
-            )}
-          </div>
-        </li>
-      ))}
-    </ol>
+          </li>
+        ))}
+      </ol>
+    </div>
   </div>
 </section>
 
 <script>
-  // La línea se "dibuja" con el scroll y enciende cada nodo al pasar
-  const tl = document.querySelector<HTMLElement>('[data-timeline]')!;
-  const fill = tl.querySelector<HTMLElement>('.tl-fill')!;
-  const jobs = [...tl.querySelectorAll<HTMLElement>('[data-job]')];
-  let queued = false;
-  const update = () => {
-    queued = false;
-    const r = tl.getBoundingClientRect();
-    const mark = innerHeight * 0.65;
-    const p = Math.min(1, Math.max(0, (mark - r.top) / r.height));
-    fill.style.setProperty('--p', p.toFixed(3));
-    jobs.forEach((j) => j.classList.toggle('lit', j.getBoundingClientRect().top + 12 < mark));
+  const sec = document.querySelector<HTMLElement>('[data-xp]')!;
+  const n = Number(sec.dataset.n);
+  const jobs = [...sec.querySelectorAll<HTMLElement>('[data-job]')];
+  const heads = [...sec.querySelectorAll<HTMLElement>('[data-head]')];
+  const count = sec.querySelector<HTMLElement>('[data-xp-count]')!;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let last = Infinity;
+
+  // step: -1 = todo oculto · 0..n-1 = experiencia en foco · n = diseño final compacto
+  const apply = (step: number) => {
+    if (step === last) return;
+    last = step;
+    sec.dataset.step = String(step);
+    jobs.forEach((j, i) => {
+      const state = i > step ? 'pending' : i === step ? 'focus' : 'done';
+      j.dataset.state = state;
+      j.classList.toggle('lit', state !== 'pending');
+      j.toggleAttribute('data-final', step >= n);
+    });
+    const h = step < 0 ? 0 : step;
+    heads.forEach((el, k) => { el.classList.toggle('on', k === h); el.toggleAttribute('aria-hidden', k !== h); });
+    count.textContent = step >= 0 && step < n ? `${String(step + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}` : '';
   };
-  addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(update); } }, { passive: true });
-  update();
+
+  if (reduce) {
+    sec.classList.add('xp-static');
+    apply(n);
+  } else {
+    let queued = false;
+    let lastY = scrollY;
+    let collapsed = false;
+
+    // Al subir: la secuencia no se repite. Se compacta la sección al diseño final y se
+    // compensa el scroll para que la pantalla no se mueva.
+    const collapse = (r: DOMRect) => {
+      const y0 = scrollY; // antes de que el navegador recorte el scroll al encoger la página
+      const top = y0 + r.top;
+      const stageTop = Math.min(Math.max(y0, top), top + r.height - innerHeight);
+      sec.classList.add('xp-collapsed');
+      collapsed = true;
+      apply(n);
+      scrollTo({ top: y0 - (stageTop - top), behavior: 'instant' });
+      lastY = scrollY;
+    };
+
+    const update = () => {
+      queued = false;
+      const dir = Math.sign(scrollY - lastY);
+      lastY = scrollY;
+      const r = sec.getBoundingClientRect();
+
+      if (collapsed) {
+        // Al bajar otra vez desde arriba, la secuencia vuelve a estar disponible
+        if (dir > 0 && r.top > innerHeight * 0.45) { sec.classList.remove('xp-collapsed'); collapsed = false; return apply(-1); }
+        return apply(n);
+      }
+      if (dir < 0 && r.top < 0 && r.bottom > 0) return collapse(r);
+
+      const total = Math.max(1, r.height - innerHeight);
+      if (r.top > innerHeight * 0.45) return apply(-1);
+      if (r.bottom < 0) return apply(n);
+      const p = Math.min(1, Math.max(0, -r.top / total));
+      apply(Math.min(n, Math.floor(p * (n + 1))));
+    };
+    addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(update); } }, { passive: true });
+    addEventListener('resize', update);
+    update();
+  }
 </script>

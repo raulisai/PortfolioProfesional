@@ -34,6 +34,9 @@ const experience = defineCollection({
       start: z.string(),
       end: z.string().optional(),           // vacío = actualidad
       summary: z.string().max(140),
+      headline: z.tuple([z.string(), z.string(), z.string()]), // título dinámico de la izquierda (el del medio va resaltado)
+      challenge: z.string(),                // problema que enfrenté
+      learned: z.array(z.string()).max(4),  // tecnologías y aprendizajes
       stack: z.array(z.string()).max(5).default([]),
       logo: image().optional(),             // si no hay logo se muestra la inicial
       order: z.number().default(0),
