@@ -11,7 +11,7 @@ export default defineConfig({
   adapter: node({ mode: 'standalone' }),
   integrations: [sitemap()],
   vite: { plugins: [tailwindcss()] },
-  // Detrás de Caddy la petición llega por http: se declara el dominio público para que la
+  // Detrás de nginx la petición llega por http: se declara el dominio público para que la
   // verificación de origen del formulario (Astro Actions) acepte https://isaidev.site.
   security: {
     allowedDomains: [
