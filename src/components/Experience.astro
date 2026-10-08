@@ -2,12 +2,50 @@
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import { site } from '../data/site';
+import { techIcon } from '../data/tech-icons';
 const jobs = (await getCollection('experience')).sort((a, b) => a.data.order - b.data.order);
 const n = jobs.length;
 const heads = [...jobs.map((j) => j.data.headline), site.experienceHeading]; // el último es el título final
+
+// Fondo: tres filas de tecnologías por trabajo, con el orden rotado para que no coincidan
+const rows = (list: string[]) => {
+  const k = Math.ceil(list.length / 3);
+  return [list, [...list.slice(k), ...list.slice(0, k)], [...list.slice(2 * k), ...list.slice(0, 2 * k)]];
+};
+// Cada mitad de la fila repite la lista hasta llenar de sobra la pantalla
+const fill = (list: string[]) => Array.from({ length: Math.max(2, Math.ceil(12 / list.length)) }, () => list).flat();
 ---
 <section id="experiencia" data-xp data-step={n} data-n={n} style={`--n:${n}`} class="xp relative" aria-label="Experiencia">
   <div class="xp-stick">
+    <div class="xp-bg" aria-hidden="true">
+      {jobs.map((j) => (
+        <div class="xp-tech past" data-tech>
+          {rows(j.data.tech).map((row, r) => (
+            <div class={`xp-row xp-row-${r}`}>
+              <div class="xp-track">
+                {[0, 1].map(() => (
+                  <div class="xp-seq">
+                    {fill(row).map((t) => {
+                      const ic = techIcon(t);
+                      return (
+                        <span class="xp-pill" style={`--c:${ic.color}`}>
+                          <i class="xp-ico">
+                            {ic.kind === 'brand'
+                              ? <svg viewBox="0 0 24 24" fill="currentColor"><path d={ic.path} /></svg>
+                              : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d={ic.path} /></svg>}
+                          </i>
+                          {t}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
     <div class="pointer-events-none absolute -left-40 top-10 size-[36rem] rounded-full bg-accent/10 blur-[140px]" aria-hidden="true"></div>
     <div class="relative mx-auto grid w-full max-w-6xl gap-5 md:grid-cols-[1fr_1.35fr] md:items-start md:gap-20">
       <div class="md:pt-[7dvh]">
@@ -19,6 +57,7 @@ const heads = [...jobs.map((j) => j.data.headline), site.experienceHeading]; // 
             </h2>
           ))}
         </div>
+        <p class="xp-stats mt-6 hidden text-sm tracking-wide text-muted md:block">{site.experienceStats}</p>
       </div>
 
       <ol class="relative">
@@ -38,10 +77,8 @@ const heads = [...jobs.map((j) => j.data.headline), site.experienceHeading]; // 
               <!-- Detalle: solo mientras la experiencia está en foco -->
               <div class="xp-fold xp-detail-fold"><div class="inner">
                 <div class="pl-11 pt-2 md:pt-3">
-                  <p class="eyebrow">Problema</p>
-                  <p class="mt-1 max-w-lg text-[0.75rem] leading-snug text-fg/85 md:text-sm md:leading-relaxed">{j.data.challenge}</p>
-                  <p class="eyebrow mt-2.5 md:mt-4">Tecnologías y aprendizajes</p>
-                  <ul class="mt-1.5 flex flex-wrap gap-1.5 md:mt-2 md:gap-2">
+                  <p class="max-w-lg text-[0.75rem] leading-snug text-fg/85 md:text-sm md:leading-relaxed">{j.data.challenge}</p>
+                  <ul class="mt-2.5 flex flex-wrap gap-1.5 md:mt-3.5 md:gap-2">
                     {j.data.learned.map((l) => <li class="chip !border-accent/35 !bg-accent/10 !px-2.5 !py-0.5 !text-[0.68rem] !text-[#dfe2ff] md:!px-[0.85rem] md:!py-[0.35rem] md:!text-[0.78rem]">{l}</li>)}
                   </ul>
                 </div>
@@ -71,6 +108,7 @@ const heads = [...jobs.map((j) => j.data.headline), site.experienceHeading]; // 
   const jobs = [...sec.querySelectorAll<HTMLElement>('[data-job]')];
   const heads = [...sec.querySelectorAll<HTMLElement>('[data-head]')];
   const count = sec.querySelector<HTMLElement>('[data-xp-count]')!;
+  const techs = [...sec.querySelectorAll<HTMLElement>('[data-tech]')];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let last = Infinity;
 
@@ -87,6 +125,10 @@ const heads = [...jobs.map((j) => j.data.headline), site.experienceHeading]; // 
     });
     const h = step < 0 ? 0 : step;
     heads.forEach((el, k) => { el.classList.toggle('on', k === h); el.toggleAttribute('aria-hidden', k !== h); });
+    // Las tecnologías del trabajo anterior salen por la izquierda y entran las nuevas por la derecha
+    // En el estado final ya están todos los puestos en pantalla: las tecnologías se retiran
+    techs.forEach((el, k) => { el.classList.toggle('on', k === h && step < n); el.classList.toggle('past', k < h || step >= n); });
+    sec.toggleAttribute('data-final', step >= n);
     count.textContent = step >= 0 && step < n ? `${String(step + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}` : '';
   };
 

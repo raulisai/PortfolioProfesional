@@ -1,11 +1,12 @@
 ---
 company: "Santander"
-role: "DevOps"
+role: "DevOps Engineer"
 start: "2022"
-summary: "Automatizo clústeres: hasta 30% menos consumo de recursos."
-stack: ["Python", "OpenShift", "Jenkins", "Git Actions"]
-headline: ["Automatizando", "clústeres", "en producción."]
-challenge: "Los servicios en clústeres consumían más recursos de los necesarios. Reconfiguré sus parámetros con scripting para reducir el consumo hasta 30% sin afectar el servicio."
-learned: ["Scripting con Python y Bash", "OpenShift y Kubernetes", "CI/CD con Jenkins y Git Actions", "Cultura DevOps y ágil"]
+summary: "Automatización de clústeres con scripting: hasta 30% menos consumo de recursos."
+stack: ["Python", "OpenShift", "Jenkins", "GitHub Actions"]
+headline: ["Optimizando", "clústeres", "bancarios."]
+challenge: "Automaticé la reconfiguración de servicios en clústeres con scripting y reduje hasta 30% el consumo de recursos, en un equipo DevOps ágil."
+learned: ["Python & Bash", "OpenShift / Kubernetes", "CI/CD: Jenkins · GitHub Actions", "DevOps & Agile"]
+tech: ["Python", "Bash", "OpenShift", "Kubernetes", "Jenkins", "GitHub Actions", "Ansible", "Kibana", "Linux", "Git"]
 order: 1
 ---

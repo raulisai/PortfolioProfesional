@@ -1,12 +1,13 @@
 ---
 company: "Indra Sistemas"
-role: "Web Developer"
+role: "Web Developer · Java"
 start: "2019"
 end: "2020"
-summary: "Servicios web con Java Spring; migré servicios on-premise a AWS."
-stack: ["Java Spring", "SQL", "Linux", "AWS"]
+summary: "Servicios web con Java Spring y migración de servicios on-premise a AWS."
+stack: ["Java", "Spring", "SQL", "AWS"]
 headline: ["Del servidor", "on-premise", "a la nube."]
-challenge: "Desarrollar servicios web con Java Spring y migrar servicios on-premise a AWS para mejorar su escalabilidad y disponibilidad."
-learned: ["Java y Spring", "Migración on-premise a AWS", "SQL y Linux", "Despliegue a producción"]
+challenge: "Desarrollé servicios web con Java Spring y migré servicios on-premise a AWS, mejorando su escalabilidad y disponibilidad."
+learned: ["Java & Spring", "Migración a AWS", "SQL & Linux", "Despliegues a producción"]
+tech: ["Java", "Spring", "SQL", "Linux", "AWS", "REST APIs", "Servicios web", "Migración cloud"]
 order: 3
 ---

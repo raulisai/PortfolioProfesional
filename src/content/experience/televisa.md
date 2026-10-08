@@ -3,10 +3,11 @@ company: "Televisa"
 role: "Site Reliability Engineer"
 start: "2020"
 end: "2022"
-summary: "Despliegues a producción y resolución de incidentes críticos, en AWS y on-prem."
-stack: ["Microservicios", "AWS", "CI/CD", "Troubleshooting"]
+summary: "Despliegues a producción y respuesta a incidentes críticos en AWS y on-premise."
+stack: ["AWS", "Microservicios", "CI/CD", "Troubleshooting"]
 headline: ["Manteniendo", "producción", "siempre arriba."]
-challenge: "Garantizar la confiabilidad de los servicios: desplegar aplicaciones en AWS y on-premise y resolver incidentes críticos en producción."
-learned: ["Despliegues en AWS y on-prem", "Respuesta a incidentes", "Troubleshooting en producción", "Arquitectura de microservicios"]
+challenge: "Garanticé la confiabilidad de los servicios: desplegué aplicaciones en AWS y on-premise y resolví incidentes críticos en producción."
+learned: ["AWS & on-premise", "Respuesta a incidentes", "CI/CD", "Microservicios"]
+tech: ["AWS", "On-premise", "CI/CD", "Microservicios", "Troubleshooting", "Linux", "REST APIs", "Git", "Bash"]
 order: 2
 ---

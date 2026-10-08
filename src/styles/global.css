@@ -167,14 +167,13 @@ body { color: var(--color-fg); font-family: var(--font-sans); -webkit-font-smoot
 /* ---------- Mobile: una pantalla por sección (single page) ---------- */
 @media (max-width: 767px) {
   html { scroll-snap-type: y mandatory; }
-  #proyectos, #experiencia, #habilidades, #contacto { scroll-snap-align: start; scroll-snap-stop: always; min-height: 100dvh; }
+  #proyectos, #experiencia, #contacto { scroll-snap-align: start; scroll-snap-stop: always; min-height: 100dvh; }
   .scene-mountains { width: max(150vw, 620px); bottom: -2%; }
   .scene-space { left: 52%; top: 40%; width: max(150vw, 560px); }
 }
 @media (max-width: 767px) and (max-height: 740px) {
-  #contacto .sub, #habilidades .soft, #habilidades .int { display: none; }
-  #habilidades { padding-top: 4.25rem; padding-bottom: 1rem; }
-  #experiencia h2, #habilidades h2 { font-size: 1.6rem; }
+  #contacto .sub { display: none; }
+  #experiencia h2 { font-size: 1.6rem; }
 }
 
 /* ---------- Iframe en vivo dentro del marco ---------- */
@@ -230,3 +229,54 @@ body { color: var(--color-fg); font-family: var(--font-sans); -webkit-font-smoot
 html { overflow-anchor: none; }
 .xp.xp-collapsed { height: auto; }
 .xp.xp-collapsed .xp-stick { position: static; }
+
+/* ---------- Experiencia: tecnologías desfilando por el fondo ---------- */
+.xp-bg { position: absolute; inset: 0; pointer-events: none; user-select: none; }
+/* Bloque de filas juntas, centrado bajo el título para no taparlo */
+.xp-tech { position: absolute; left: 0; right: 0; top: 64%; display: flex; flex-direction: column; gap: 0.7rem;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+  opacity: 0; transform: translate3d(16%, -50%, 0); filter: blur(6px);
+  transition: opacity 0.8s ease, transform 1.5s var(--ease-out-expo), filter 0.8s ease; }
+.xp-tech.past { transform: translate3d(-16%, -50%, 0); }
+.xp-tech.on { opacity: 1; transform: translate3d(0, -50%, 0); filter: none; }
+
+.xp-row { overflow: hidden; white-space: nowrap; }
+.xp-track { display: flex; width: max-content; will-change: transform; animation: xp-marquee var(--dur, 40s) linear infinite; }
+.xp-tech:not(.on) .xp-track { animation-play-state: paused; }
+.xp-seq { display: flex; }
+@keyframes xp-marquee { to { transform: translate3d(-50%, 0, 0); } }
+
+.xp-pill { display: inline-flex; align-items: center; gap: 0.55rem; margin-right: 0.7rem; padding: 0.45rem 1rem 0.45rem 0.5rem;
+  border-radius: 999px; border: 1px solid rgb(255 255 255 / 0.09);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.065), rgb(255 255 255 / 0.02));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  font-size: 0.9rem; font-weight: 500; color: rgb(238 240 244 / 0.82); }
+.xp-ico { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 999px; color: var(--c);
+  background: color-mix(in srgb, var(--c) 16%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 28%, transparent); }
+.xp-ico svg { width: 0.95rem; height: 0.95rem; }
+
+/* Profundidad: la fila central más grande y viva; las de los lados más chicas, tenues y lentas */
+.xp-row-0, .xp-row-2 { opacity: 0.5; }
+.xp-row-0 .xp-pill, .xp-row-2 .xp-pill { font-size: 0.78rem; padding: 0.35rem 0.85rem 0.35rem 0.4rem; }
+.xp-row-0 .xp-ico, .xp-row-2 .xp-ico { width: 1.45rem; height: 1.45rem; }
+.xp-row-0 .xp-track { --dur: 46s; }
+.xp-row-1 .xp-track { --dur: 32s; }
+.xp-row-2 .xp-track { --dur: 54s; }
+.xp-row-1 { opacity: 0.85; }
+
+/* El bloque queda detrás del contenido, tenue para no competir con la lectura */
+.xp-bg { opacity: 0.55; }
+
+.xp-stats { opacity: 0; transform: translateY(10px); transition: opacity 0.8s ease 0.3s, transform 0.8s var(--ease-out-expo) 0.3s; }
+.xp[data-final] .xp-stats { opacity: 1; transform: none; }
+
+@media (max-width: 767px) {
+  /* En móvil el contenido ocupa el centro: el bloque se acomoda en el espacio libre de abajo */
+  .xp-tech { gap: 0.5rem; top: auto; bottom: 1.25rem; transform: translate3d(16%, 0, 0); }
+  .xp-tech.past { transform: translate3d(-16%, 0, 0); }
+  .xp-tech.on { transform: none; }
+  .xp-bg { opacity: 0.45; }
+  .xp-pill { font-size: 0.78rem; margin-right: 0.5rem; }
+  .xp-row-0 .xp-pill, .xp-row-2 .xp-pill { font-size: 0.7rem; }
+}
