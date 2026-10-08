@@ -1,0 +1,140 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+# Un despliegue a la vez; si llega otro push, espera su turno (no se cancela uno en curso)
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  APP_DIR: ${{ vars.APP_DIR || '/opt/portfolio' }}
+
+jobs:
+  # 1) CI: instala y compila (se ejecuta también en pull requests)
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  # 2) Construye la imagen Docker y la publica en GitHub Container Registry
+  image:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: meta
+        run: |
+          echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          echo "tag=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.tag }}
+            ${{ steps.meta.outputs.image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 3) CD: copia los archivos de despliegue por SSH y levanta la nueva versión en el servidor
+  deploy:
+    needs: image
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          if [ -n "$SSH_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "::warning::SSH_KNOWN_HOSTS no está definido: se confía en la huella del primer contacto. Guárdala como secreto para fijarla."
+            ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" > ~/.ssh/known_hosts
+          fi
+
+      - name: Generar .env del servidor
+        env:
+          IMAGE: ${{ needs.image.outputs.image }}
+          TAG: ${{ needs.image.outputs.tag }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+          CONTACT_FROM: ${{ secrets.CONTACT_FROM }}
+        run: |
+          umask 077
+          {
+            echo "IMAGE=$IMAGE"
+            echo "TAG=$TAG"
+            echo "RESEND_API_KEY=$RESEND_API_KEY"
+            echo "CONTACT_EMAIL=$CONTACT_EMAIL"
+            [ -n "$CONTACT_FROM" ] && echo "CONTACT_FROM=$CONTACT_FROM"
+          } > deploy/.env.new
+          true
+
+      - name: Copiar archivos al servidor
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+        run: |
+          SSH="ssh -i $HOME/.ssh/deploy_key -p $SSH_PORT -o BatchMode=yes"
+          $SSH "$SSH_USER@$SSH_HOST" "mkdir -p '$APP_DIR'"
+          scp -i ~/.ssh/deploy_key -P "$SSH_PORT" -o BatchMode=yes \
+            deploy/docker-compose.yml deploy/Caddyfile deploy/deploy.sh deploy/.env.new \
+            "$SSH_USER@$SSH_HOST:$APP_DIR/"
+
+      - name: Desplegar
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: |
+          # El token (válido solo durante este job) viaja por stdin, nunca por argumentos
+          printf '%s' "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" -o BatchMode=yes "$SSH_USER@$SSH_HOST" \
+            "cd '$APP_DIR' && docker login ghcr.io -u '$GHCR_USER' --password-stdin >/dev/null && bash deploy.sh; rc=\$?; docker logout ghcr.io >/dev/null 2>&1; exit \$rc"
+
+      - name: Verificar el sitio público
+        run: |
+          for i in $(seq 1 12); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://isaidev.site/ || true)
+            echo "intento $i -> HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 5
+          done
+          echo "::error::https://isaidev.site no respondió 200"
+          exit 1

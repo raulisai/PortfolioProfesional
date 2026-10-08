@@ -23,23 +23,22 @@ const fill = (list: string[]) => Array.from({ length: Math.max(2, Math.ceil(12 /
           {rows(j.data.tech).map((row, r) => (
             <div class={`xp-row xp-row-${r}`}>
               <div class="xp-track">
-                {[0, 1].map(() => (
-                  <div class="xp-seq">
-                    {fill(row).map((t) => {
-                      const ic = techIcon(t);
-                      return (
-                        <span class="xp-pill" style={`--c:${ic.color}`}>
-                          <i class="xp-ico">
-                            {ic.kind === 'brand'
-                              ? <svg viewBox="0 0 24 24" fill="currentColor"><path d={ic.path} /></svg>
-                              : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d={ic.path} /></svg>}
-                          </i>
-                          {t}
-                        </span>
-                      );
-                    })}
-                  </div>
-                ))}
+                {/* Una sola secuencia: el script la duplica para que el carril sea continuo */}
+                <div class="xp-seq">
+                  {fill(row).map((t) => {
+                    const ic = techIcon(t);
+                    return (
+                      <span class="xp-pill" style={`--c:${ic.color}`}>
+                        <i class="xp-ico">
+                          {ic.kind === 'brand'
+                            ? <svg viewBox="0 0 24 24" fill="currentColor"><path d={ic.path} /></svg>
+                            : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d={ic.path} /></svg>}
+                        </i>
+                        {t}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           ))}
@@ -109,6 +108,7 @@ const fill = (list: string[]) => Array.from({ length: Math.max(2, Math.ceil(12 /
   const heads = [...sec.querySelectorAll<HTMLElement>('[data-head]')];
   const count = sec.querySelector<HTMLElement>('[data-xp-count]')!;
   const techs = [...sec.querySelectorAll<HTMLElement>('[data-tech]')];
+  sec.querySelectorAll('.xp-track').forEach((t) => t.append(t.firstElementChild!.cloneNode(true)));
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let last = Infinity;
 

@@ -1,6 +1,7 @@
 import { defineAction, ActionError } from 'astro:actions';
 import { z } from 'astro/zod';
 import { Resend } from 'resend';
+import { RESEND_API_KEY, CONTACT_EMAIL, CONTACT_FROM } from 'astro:env/server';
 
 export const server = {
   sendMessage: defineAction({
@@ -12,12 +13,12 @@ export const server = {
       website: z.string().max(0).optional(), // honeypot
     }),
     handler: async ({ name, email, message }) => {
-      const key = import.meta.env.RESEND_API_KEY;
-      const to = import.meta.env.CONTACT_EMAIL;
-      if (!key || !to) throw new ActionError({ code: 'INTERNAL_SERVER_ERROR', message: 'El envío aún no está configurado.' });
-      const { error } = await new Resend(key).emails.send({
-        from: 'Portafolio <onboarding@resend.dev>',
-        to,
+      if (!RESEND_API_KEY || !CONTACT_EMAIL) {
+        throw new ActionError({ code: 'INTERNAL_SERVER_ERROR', message: 'El envío aún no está configurado.' });
+      }
+      const { error } = await new Resend(RESEND_API_KEY).emails.send({
+        from: CONTACT_FROM,
+        to: CONTACT_EMAIL,
         replyTo: email,
         subject: `Nuevo mensaje de ${name}`,
         text: `${name} <${email}>\n\n${message}`,

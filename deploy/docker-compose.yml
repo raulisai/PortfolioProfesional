@@ -1,0 +1,44 @@
+# Se copia al servidor (por defecto /opt/portfolio) en cada despliegue.
+# IMAGE y TAG las escribe el workflow en el .env del servidor.
+services:
+  app:
+    image: ${IMAGE:?falta IMAGE}:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+      CONTACT_FROM: ${CONTACT_FROM:-Portafolio <onboarding@resend.dev>}
+    expose:
+      - "4321"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  caddy_data:
+  caddy_config:
