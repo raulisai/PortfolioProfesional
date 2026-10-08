@@ -1,5 +1,6 @@
 # Se copia al servidor (por defecto /opt/portfolio) en cada despliegue.
-# IMAGE y TAG las escribe el workflow en el .env del servidor.
+# IMAGE, TAG y APP_PORT las escribe el workflow en el .env del servidor.
+# nginx (que ya corre en el servidor) hace de proxy hacia 127.0.0.1:APP_PORT.
 services:
   app:
     image: ${IMAGE:?falta IMAGE}:${TAG:-latest}
@@ -8,8 +9,8 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       CONTACT_EMAIL: ${CONTACT_EMAIL:-}
       CONTACT_FROM: ${CONTACT_FROM:-Portafolio <onboarding@resend.dev>}
-    expose:
-      - "4321"
+    ports:
+      - "127.0.0.1:${APP_PORT:-4321}:4321"   # solo accesible desde el propio servidor
     read_only: true
     tmpfs:
       - /tmp
@@ -20,25 +21,3 @@ services:
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
-
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    depends_on:
-      app:
-        condition: service_healthy
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    logging:
-      driver: json-file
-      options: { max-size: "10m", max-file: "3" }
-
-volumes:
-  caddy_data:
-  caddy_config:

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Se ejecuta EN EL SERVIDOR (lo invoca el workflow por SSH).
-# Espera en el directorio de la app: docker-compose.yml, Caddyfile y .env.new (con IMAGE, TAG y secretos).
+# Espera en el directorio de la app: docker-compose.yml y .env.new (con IMAGE, TAG y secretos).
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -36,10 +36,6 @@ if [ "$ok" -ne 1 ]; then
   fi
   exit 1
 fi
-
-# El proxy se levanta (o se recarga si el Caddyfile cambió) solo cuando la app ya responde
-docker compose up -d --remove-orphans caddy
-docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1 || true
 
 docker image prune -f >/dev/null
 echo ">> Despliegue correcto: $(grep '^TAG=' .env | cut -d= -f2)"

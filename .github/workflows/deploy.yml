@@ -61,7 +61,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # 3) CD: copia los archivos de despliegue por SSH y levanta la nueva versión en el servidor
+  # 3) CD: copia los archivos por SSH y levanta la nueva versión; nginx (ya instalado) la publica
   deploy:
     needs: image
     runs-on: ubuntu-latest
@@ -93,11 +93,13 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
           CONTACT_FROM: ${{ secrets.CONTACT_FROM }}
+          APP_PORT: ${{ vars.APP_PORT || '4321' }}
         run: |
           umask 077
           {
             echo "IMAGE=$IMAGE"
             echo "TAG=$TAG"
+            echo "APP_PORT=$APP_PORT"
             echo "RESEND_API_KEY=$RESEND_API_KEY"
             echo "CONTACT_EMAIL=$CONTACT_EMAIL"
             [ -n "$CONTACT_FROM" ] && echo "CONTACT_FROM=$CONTACT_FROM"
@@ -113,7 +115,7 @@ jobs:
           SSH="ssh -i $HOME/.ssh/deploy_key -p $SSH_PORT -o BatchMode=yes"
           $SSH "$SSH_USER@$SSH_HOST" "mkdir -p '$APP_DIR'"
           scp -i ~/.ssh/deploy_key -P "$SSH_PORT" -o BatchMode=yes \
-            deploy/docker-compose.yml deploy/Caddyfile deploy/deploy.sh deploy/.env.new \
+            deploy/docker-compose.yml deploy/deploy.sh deploy/.env.new \
             "$SSH_USER@$SSH_HOST:$APP_DIR/"
 
       - name: Desplegar
